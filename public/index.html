@@ -2,172 +2,260 @@
 <html lang="id">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Caca AI</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>Nana Ai - iOS 26</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
-        body { font-family: 'Inter', sans-serif; background-color: #000; color: #fff; overflow: hidden; }
-        
-        /* Gradasi Teks Sesuai Gambar */
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+
+        :root {
+            --bg-color: #e8e8eb; 
+            --glass-bg: rgba(255, 255, 255, 0.4);
+            --glass-border: rgba(255, 255, 255, 0.5);
+            --ios-shadow: 0 10px 30px rgba(0, 0, 0, 0.05);
+        }
+
+        /* Perbaikan agar tidak terpotong di HP */
+        html, body {
+            height: 100%;
+            margin: 0;
+            padding: 0;
+            overflow: hidden;
+            background: var(--bg-color);
+            font-family: -apple-system, BlinkMacSystemFont, 'Inter', sans-serif;
+        }
+
+        /* ===== SPARKLING BACKGROUND ===== */
+        .area-shapes {
+            position: fixed;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            z-index: -1;
+        }
+
+        .shape {
+            position: absolute;
+            filter: blur(1.5px);
+            opacity: 0.5;
+            animation: float 8s infinite ease-in-out, sparkle 2s infinite alternate;
+        }
+
+        @keyframes float {
+            0% { transform: translate(0, 0) rotate(0deg) scale(1); }
+            50% { transform: translate(30px, -50px) rotate(180deg) scale(1.1); }
+            100% { transform: translate(0, 0) rotate(360deg) scale(1); }
+        }
+
+        @keyframes sparkle {
+            0% { opacity: 0.3; filter: brightness(1); }
+            100% { opacity: 0.7; filter: brightness(1.6); }
+        }
+
+        .circle { border-radius: 50%; }
+        .square { border-radius: 25%; }
+
+        /* ===== UI GLASS ELEMENTS ===== */
+        .glass-header {
+            background: var(--glass-bg);
+            backdrop-filter: blur(25px) saturate(180%);
+            -webkit-backdrop-filter: blur(25px) saturate(180%);
+            border-bottom: 1px solid var(--glass-border);
+        }
+
+        .sidebar-glass {
+            background: rgba(255, 255, 255, 0.8);
+            backdrop-filter: blur(40px);
+            border-right: 1px solid var(--glass-border);
+        }
+
+        .chat-container::-webkit-scrollbar { width: 3px; }
+        .chat-container::-webkit-scrollbar-thumb { background: rgba(0,0,0,0.1); border-radius: 10px; }
+
+        .bubble-ai {
+            background: rgba(255, 255, 255, 0.7);
+            backdrop-filter: blur(10px);
+            border: 1px solid var(--glass-border);
+            color: #1c1c1e;
+            border-radius: 20px 20px 20px 5px;
+        }
+
+        .bubble-user {
+            background: linear-gradient(135deg, #6366f1, #a855f7, #ec4899);
+            color: white;
+            border-radius: 20px 20px 5px 20px;
+        }
+
         .text-gradient {
-            background: linear-gradient(to right, #4f87ed 10%, #a374cf 45%, #e06472 80%);
-            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+            background: linear-gradient(to right, #4f87ed, #a374cf, #e06472);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
         }
 
-        /* Glassmorphism Input Bar */
-        .ios-blur {
-            background: rgba(28, 28, 30, 0.85);
-            backdrop-filter: blur(25px); -webkit-backdrop-filter: blur(25px);
-            border-top: 1px solid rgba(255, 255, 255, 0.05);
+        .input-bar-container {
+            background: var(--glass-bg);
+            backdrop-filter: blur(30px);
+            border: 1px solid var(--glass-border);
+            border-radius: 30px;
+            box-shadow: var(--ios-shadow);
         }
 
-        /* Mobile Sidebar Toggle */
-        .sidebar-hide { transform: translateX(-100%); }
-        .sidebar-show { transform: translateX(0); }
-
-        .chat-container::-webkit-scrollbar { width: 4px; }
-        .chat-container::-webkit-scrollbar-thumb { background: #333; border-radius: 10px; }
-        
-        .bubble-ai { background: #1c1c1e; border-radius: 18px 18px 18px 4px; }
-        .bubble-user { background: #007aff; border-radius: 18px 18px 4px 18px; }
+        /* Transisi Sidebar Mobile */
+        .sidebar-mobile { position: fixed; height: 100%; transition: 0.3s; z-index: 50; }
+        .sidebar-hidden { transform: translateX(-100%); }
+        .sidebar-visible { transform: translateX(0); }
     </style>
 </head>
-<body class="flex h-screen w-full relative">
+<body class="flex flex-col">
 
-    <!-- Mobile Overlay -->
-    <div id="overlay" class="fixed inset-0 bg-black/60 z-30 hidden transition-opacity"></div>
+    <div class="area-shapes" id="shapes-container"></div>
 
-    <!-- SIDEBAR -->
-    <aside id="sidebar" class="fixed md:relative w-64 h-full bg-[#131314] z-40 transition-transform duration-300 sidebar-hide md:sidebar-show border-r border-white/5 flex flex-col">
-        <div class="p-5 flex-1">
-            <div class="flex items-center justify-between mb-8 md:hidden">
-                <span class="font-bold text-lg">Caca</span>
-                <button onclick="toggleSidebar()" class="text-gray-400"><i class="fa-solid fa-xmark text-xl"></i></button>
+    <!-- Overlay Mobile -->
+    <div id="overlay" class="fixed inset-0 bg-black/20 backdrop-blur-sm z-40 hidden" onclick="toggleSidebar()"></div>
+
+    <div class="flex flex-1 overflow-hidden relative">
+        
+        <!-- Sidebar -->
+        <aside id="sidebar" class="sidebar-mobile md:relative w-72 sidebar-glass flex flex-col sidebar-hidden md:translate-x-0 shadow-2xl md:shadow-none">
+            <div class="p-6">
+                <div class="flex justify-between items-center mb-10">
+                    <span class="font-black text-gray-800 text-xl tracking-tighter">Menu</span>
+                    <button onclick="toggleSidebar()" class="md:hidden"><i class="fa-solid fa-xmark text-xl text-gray-400"></i></button>
+                </div>
+                <button onclick="location.reload()" class="w-full flex items-center justify-center gap-2 bg-white text-gray-800 py-3.5 rounded-2xl font-bold shadow-sm border border-gray-100 active:scale-95 transition">
+                    <i class="fa-solid fa-plus text-xs"></i> CHAT BARU
+                </button>
             </div>
-            <button id="newChatBtn" class="w-full flex items-center justify-center gap-2 bg-[#1e1f20] py-3 rounded-full font-medium hover:bg-[#2c2c2e] transition border border-white/5 text-sm">
-                <i class="fa-solid fa-plus text-[10px]"></i> Chat Baru
-            </button>
-        </div>
-        <div class="p-8 border-t border-white/5">
-            <p class="text-[9px] text-gray-600 font-bold uppercase tracking-widest mb-1">Developer by</p>
-            <p class="text-[14px] font-bold italic text-white/50">Fahrul</p>
-        </div>
-    </aside>
-
-    <!-- MAIN CONTENT -->
-    <main class="flex-1 flex flex-col h-full w-full relative bg-[#000]">
-        <!-- Header -->
-        <header class="p-4 flex justify-between items-center z-10 sticky top-0 bg-[#000]">
-            <button onclick="toggleSidebar()" class="md:hidden p-2 text-gray-400"><i class="fa-solid fa-bars-staggered text-xl"></i></button>
-            <div class="text-xl font-bold md:ml-4 tracking-tight">Caca</div>
-            <div class="w-8 h-8 rounded-full bg-gradient-to-tr from-blue-600 to-purple-600 border border-white/20"></div>
-        </header>
-
-        <!-- Chat History -->
-        <div id="chatBox" class="flex-1 overflow-y-auto chat-container p-5 md:px-20 lg:px-60 space-y-6">
-            <!-- Welcome View (Small Text Size) -->
-            <div id="welcomeView" class="h-full flex flex-col justify-center animate-fadeIn">
-                <h1 class="text-4xl md:text-5xl font-bold tracking-tight text-gradient">Halo, User.</h1>
-                <p class="text-3xl md:text-5xl font-bold tracking-tight text-[#444746]">Caca siap bantu</p>
+            
+            <div class="flex-1 px-6 space-y-4">
+                <!-- Chat history items bisa di sini -->
             </div>
-        </div>
 
-        <!-- Input Box Area -->
-        <div class="ios-blur p-4 md:px-20 lg:px-60 pb-8">
-            <div class="max-w-4xl mx-auto relative">
+            <!-- Footer Sidebar Update -->
+            <div class="p-6 border-t border-gray-100 text-center">
+                <p class="text-[10px] text-gray-400 font-black tracking-widest uppercase leading-loose">
+                    DEVELOPER BY <br>
+                    <span class="text-gray-700 text-xs">FAHRUL RISKIANA</span>
+                </p>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="flex-1 flex flex-col min-w-0 bg-transparent">
+            
+            <!-- Header Nama Ganti ke Nana Ai -->
+            <header class="glass-header h-14 md:h-16 flex items-center justify-between px-5">
+                <button onclick="toggleSidebar()" class="md:hidden text-gray-600 p-2">
+                    <i class="fa-solid fa-bars-staggered text-xl"></i>
+                </button>
+                <div class="text-xl font-black text-gray-800 tracking-tighter">Nana Ai</div>
+                <div class="w-8 h-8 rounded-full bg-white flex items-center justify-center border border-gray-200 shadow-sm text-[10px] font-black text-gray-400 uppercase">
+                    F
+                </div>
+            </header>
+
+            <!-- Chat Window -->
+            <div id="chatWindow" class="flex-1 overflow-y-auto chat-container p-4 md:px-20 lg:px-56 space-y-6">
+                <div id="welcomeView" class="h-full flex flex-col items-center justify-center text-center opacity-100 transition-opacity">
+                    <h1 class="text-4xl md:text-5xl font-black tracking-tighter text-gradient">Halo, User.</h1>
+                    <p class="text-2xl font-bold text-gray-400 tracking-tight mt-1">Nana siap bantu</p>
+                </div>
+            </div>
+
+            <!-- Bottom Area Update Footer -->
+            <div class="p-4 md:px-20 lg:px-56 pb-6 bg-transparent">
+                <div class="max-w-4xl mx-auto input-bar-container flex items-center p-1.5 pl-4 border border-white/40">
+                    <button class="p-3 text-[#6366f1] active:scale-90 transition"><i class="fa-solid fa-circle-plus text-2xl"></i></button>
+                    
+                    <input type="text" id="userInput" placeholder="Tanya Nana Ai..." class="bg-transparent flex-1 outline-none px-2 font-semibold text-gray-700 placeholder-gray-400 text-sm md:text-base">
+                    
+                    <button id="sendBtn" class="w-10 h-10 bg-gradient-to-tr from-[#6366f1] to-[#ec4899] text-white rounded-full flex items-center justify-center shadow-md active:scale-90 transition">
+                        <i class="fa-solid fa-arrow-up font-bold"></i>
+                    </button>
+                </div>
                 
-                <!-- Preview Foto -->
-                <div id="imgPreview" class="hidden mb-2 px-3 py-1.5 bg-blue-500/10 text-blue-400 text-xs rounded-xl flex items-center gap-2 w-fit border border-blue-500/20">
-                    <i class="fa-solid fa-image"></i> <span id="imgName">photo.jpg</span>
-                    <button id="delImg" class="hover:text-white ml-1"><i class="fa-solid fa-circle-xmark"></i></button>
-                </div>
-
-                <div class="flex items-center gap-2 bg-[#1c1c1e] p-2 rounded-[28px] border border-white/5 focus-within:ring-1 focus-within:ring-white/10 transition-all">
-                    <!-- Upload File -->
-                    <button id="uploadBtn" class="w-10 h-10 flex items-center justify-center text-[#007aff] hover:bg-white/5 rounded-full"><i class="fa-solid fa-circle-plus text-2xl"></i></button>
-                    <input type="file" id="fileInp" class="hidden" accept="image/*">
-                    
-                    <input type="text" id="userInput" placeholder="Tanya Caca..." class="bg-transparent flex-1 outline-none px-2 text-base text-gray-100 placeholder-gray-500">
-                    
-                    <!-- Send Btn -->
-                    <button id="sendBtn" class="w-10 h-10 bg-white text-black rounded-full flex items-center justify-center transition active:scale-90 shadow-lg"><i class="fa-solid fa-arrow-up text-lg"></i></button>
-                </div>
-                <p class="text-center text-[10px] text-gray-700 mt-4 font-bold tracking-[2px] uppercase">Caca AI • iOS 26.2</p>
+                <!-- Footer Text Sesuai Permintaan -->
+                <p class="text-center text-[10px] text-gray-500 font-black mt-4 tracking-[1px] md:tracking-[3px] uppercase">
+                    DEVELOPER BY FAHRUL RISKIANA
+                </p>
             </div>
-        </div>
-    </main>
+        </main>
+    </div>
 
     <script>
-        const chatBox = document.getElementById('chatBox');
-        const userInput = document.getElementById('userInput');
+        // Animasi Sparkling Background
+        function createShapes() {
+            const container = document.getElementById('shapes-container');
+            const colors = ['#FFADAD', '#CAFFBF', '#9BF6FF', '#BDB2FF', '#FFC6FF'];
+            for (let i = 0; i < 15; i++) {
+                const shape = document.createElement('div');
+                const size = Math.random() * 60 + 20;
+                const type = Math.floor(Math.random() * 2);
+                const color = colors[Math.floor(Math.random() * colors.length)];
+                
+                shape.className = type === 0 ? 'shape circle' : 'shape square';
+                shape.style.width = `${size}px`; 
+                shape.style.height = `${size}px`; 
+                shape.style.background = `radial-gradient(circle at 30% 30%, white, ${color})`;
+                shape.style.top = `${Math.random() * 100}%`;
+                shape.style.left = `${Math.random() * 100}%`;
+                shape.style.animationDuration = `${Math.random() * 5 + 5}s`;
+                container.appendChild(shape);
+            }
+        }
+        createShapes();
+
+        // Chat Logic
+        const chatWindow = document.getElementById('chatWindow');
         const welcomeView = document.getElementById('welcomeView');
+        const userInput = document.getElementById('userInput');
         const sidebar = document.getElementById('sidebar');
         const overlay = document.getElementById('overlay');
-        const fileInp = document.getElementById('fileInp');
 
-        // Toggle Sidebar HP
         function toggleSidebar() {
-            sidebar.classList.toggle('sidebar-hide');
-            sidebar.classList.toggle('sidebar-show');
+            sidebar.classList.toggle('sidebar-hidden');
+            sidebar.classList.toggle('sidebar-visible');
             overlay.classList.toggle('hidden');
         }
 
-        overlay.onclick = toggleSidebar;
+        async function sendMessage() {
+            const val = userInput.value.trim();
+            if(!val) return;
 
-        // Reset Chat (Chat Baru)
-        document.getElementById('newChatBtn').onclick = () => location.reload();
-
-        // Upload Logic
-        document.getElementById('uploadBtn').onclick = () => fileInp.click();
-        fileInp.onchange = () => {
-            if(fileInp.files[0]) {
-                document.getElementById('imgPreview').classList.remove('hidden');
-                document.getElementById('imgName').innerText = fileInp.files[0].name;
-            }
-        };
-        document.getElementById('delImg').onclick = () => {
-            fileInp.value = "";
-            document.getElementById('imgPreview').classList.add('hidden');
-        };
-
-        // Kirim Chat
-        async function kirim() {
-            const text = userInput.value.trim();
-            if(!text) return;
-
-            welcomeView.classList.add('hidden');
-            chatBox.innerHTML += `<div class="flex justify-end"><div class="bubble-user px-4 py-2.5 max-w-[85%] text-[15px] shadow-md">${text}</div></div>`;
+            welcomeView.style.display = 'none';
+            chatWindow.innerHTML += `
+                <div class="flex justify-end animate-in fade-in slide-in-from-right-4 duration-300">
+                    <div class="bubble-user px-5 py-3 max-w-[85%] font-semibold shadow-sm">${val}</div>
+                </div>`;
+            
             userInput.value = "";
-            chatBox.scrollTop = chatBox.scrollHeight;
+            chatWindow.scrollTop = chatWindow.scrollHeight;
 
-            // Efek Loading
-            const lid = 'id' + Date.now();
-            chatBox.innerHTML += `<div id="${lid}" class="flex gap-2 text-gray-500 text-[13px] italic p-2 tracking-wide">Caca sedang mengetik...</div>`;
+            const tempId = 'id-' + Date.now();
+            chatWindow.innerHTML += `<div id="${tempId}" class="text-[10px] text-gray-400 font-black uppercase px-2 tracking-widest italic animate-pulse">Berpikir...</div>`;
 
             try {
                 const res = await fetch('/api/chat', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ messages: [{ role: 'user', content: text }] })
+                    body: JSON.stringify({ messages: [{ role: 'user', content: val }] })
                 });
                 const data = await res.json();
-                document.getElementById(lid).remove();
+                document.getElementById(tempId).remove();
 
-                const replay = data.choices[0].message.content;
-                chatBox.innerHTML += `<div class="flex justify-start items-start gap-3">
-                    <div class="w-7 h-7 rounded-full bg-blue-600 flex-shrink-0 flex items-center justify-center mt-1"><i class="fa-solid fa-wand-magic-sparkles text-[10px]"></i></div>
-                    <div class="bubble-ai px-4 py-3 max-w-[85%] text-[15px] leading-relaxed shadow-sm">${replay}</div>
-                </div>`;
-            } catch (e) {
-                document.getElementById(lid).innerText = "Maaf, koneksi Caca terputus.";
+                const aiReply = data.choices[0].message.content;
+                chatWindow.innerHTML += `
+                    <div class="flex justify-start animate-in fade-in slide-in-from-left-4 duration-500">
+                        <div class="bubble-ai px-5 py-3 max-w-[92%] font-medium leading-relaxed shadow-sm">${aiReply}</div>
+                    </div>`;
+            } catch (err) {
+                document.getElementById(tempId).innerHTML = '<span class="text-red-400">Gagal terhubung ke Nana Ai.</span>';
             }
-            chatBox.scrollTop = chatBox.scrollHeight;
+            chatWindow.scrollTop = chatWindow.scrollHeight;
         }
 
-        document.getElementById('sendBtn').onclick = kirim;
-        userInput.onkeypress = (e) => { if(e.key === 'Enter') kirim(); };
+        document.getElementById('sendBtn').onclick = sendMessage;
+        userInput.onkeypress = (e) => { if(e.key === 'Enter') sendMessage(); };
     </script>
 </body>
 </html>
