@@ -1,16 +1,16 @@
-// api/chat.js (Khusus Gemini API)
+// api/chat.js (Update Fix untuk Gemini)
 module.exports = async (req, res) => {
     if (req.method !== 'POST') return res.status(405).json({ error: 'POST Only' });
 
-    // Salin API Key dari gambar Google AI Studio kamu tadi ke sini
+    // Gunakan API Key Gemini kamu
     const API_KEY = "AIzaSyAlb8WbGyDXINyGxMSodJKFwVtUrHgnMH4";
 
-    // Menyiapkan pesan terakhir dari user
-    const lastUserMessage = req.body.messages[req.body.messages.length - 1].content;
+    const messages = req.body.messages;
+    const lastUserMessage = messages[messages.length - 1].content;
 
     try {
-        // Endpoint Google Gemini 1.5 Flash (Sangat Cepat & Gratis)
-        const API_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${API_KEY}`;
+        // Kita gunakan versi v1 (lebih stabil) dan model gemini-1.5-flash
+        const API_URL = `https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash:generateContent?key=${API_KEY}`;
 
         const response = await fetch(API_URL, {
             method: "POST",
@@ -20,37 +20,41 @@ module.exports = async (req, res) => {
             body: JSON.stringify({
                 contents: [
                     {
-                        parts: [
-                            { text: lastUserMessage }
-                        ]
+                        role: "user",
+                        parts: [{ text: lastUserMessage }]
                     }
-                ]
+                ],
+                generationConfig: {
+                    temperature: 0.7,
+                    topK: 40,
+                    topP: 0.95,
+                    maxOutputTokens: 1024,
+                }
             })
         });
 
         const data = await response.json();
 
-        // Mengambil teks balasan dari struktur data Gemini
+        // Jika berhasil mengambil data
         if (data.candidates && data.candidates[0].content) {
             const aiText = data.candidates[0].content.parts[0].text;
             
-            // Format disesuaikan agar frontend tetap jalan (seperti OpenAI format)
             return res.status(200).json({
                 choices: [{
                     message: { content: aiText }
                 }]
             });
         } else {
-            console.error("Gemini Error:", data);
+            // Tampilkan error jika gagal respon
+            const errorMsg = data.error ? data.error.message : "Nana Ai bingung, coba kirim lagi pesan kamu.";
             return res.status(200).json({ 
                 choices: [{ 
-                    message: { content: "Waduh cik, Nana gagal mikir: " + (data.error ? data.error.message : "Gagal respon") } 
+                    message: { content: "Waduh cik: " + errorMsg } 
                 }] 
             });
         }
 
     } catch (err) {
-        console.error("System Error:", err);
-        return res.status(500).json({ error: "Gagal menyambung ke otak Gemini." });
+        return res.status(500).json({ error: "Gagal menyambung ke otak Nana Ai." });
     }
 };
