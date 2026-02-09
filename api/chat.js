@@ -7,7 +7,7 @@ export default async function handler(req, res) {
     return res.status(405).json({ error: "POST doang 😒" });
   }
 
-  const API_KEY = process.env.GOOGLE_API_KEY;
+  const API_KEY = process.env.OPENAI_API_KEY;
   if (!API_KEY) {
     return res.status(500).json({
       choices: [{ message: { content: "API key belum ada 😤" } }]
@@ -20,16 +20,18 @@ export default async function handler(req, res) {
 
   try {
     const response = await fetch(
-      `https://generativeai.googleapis.com/v1/models/gemini-1.5-flash:generateContent?key=${API_KEY}`,
+      "https://api.openai.com/v1/chat/completions",
       {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Authorization": `Bearer ${API_KEY}`,
+          "Content-Type": "application/json"
+        },
         body: JSON.stringify({
-          contents: [
-            {
-              role: "user",
-              parts: [{ text: lastUserMessage }]
-            }
+          model: "gpt-3.5-turbo",
+          messages: [
+            { role: "system", content: "Kamu adalah Nana AI yang ramah dan membantu." },
+            { role: "user", content: lastUserMessage }
           ]
         })
       }
@@ -42,8 +44,8 @@ export default async function handler(req, res) {
         {
           message: {
             content:
-              data.candidates?.[0]?.content?.parts?.[0]?.text ||
-              "Aku diem 😒"
+              data.choices?.[0]?.message?.content ||
+              "Aku diem dulu 😒"
           }
         }
       ]
@@ -53,7 +55,7 @@ export default async function handler(req, res) {
       choices: [
         {
           message: {
-            content: "Server Google rese 😤"
+            content: "Server OpenAI rese 😤"
           }
         }
       ]
