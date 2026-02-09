@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Caca AI</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+        body { font-family: 'Inter', sans-serif; background-color: #000; color: #fff; overflow: hidden; }
+        
+        /* Gradasi Teks Sesuai Gambar */
+        .text-gradient {
+            background: linear-gradient(to right, #4f87ed 10%, #a374cf 45%, #e06472 80%);
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+        }
+
+        /* Glassmorphism Input Bar */
+        .ios-blur {
+            background: rgba(28, 28, 30, 0.85);
+            backdrop-filter: blur(25px); -webkit-backdrop-filter: blur(25px);
+            border-top: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        /* Mobile Sidebar Toggle */
+        .sidebar-hide { transform: translateX(-100%); }
+        .sidebar-show { transform: translateX(0); }
+
+        .chat-container::-webkit-scrollbar { width: 4px; }
+        .chat-container::-webkit-scrollbar-thumb { background: #333; border-radius: 10px; }
+        
+        .bubble-ai { background: #1c1c1e; border-radius: 18px 18px 18px 4px; }
+        .bubble-user { background: #007aff; border-radius: 18px 18px 4px 18px; }
+    </style>
+</head>
+<body class="flex h-screen w-full relative">
+
+    <!-- Mobile Overlay -->
+    <div id="overlay" class="fixed inset-0 bg-black/60 z-30 hidden transition-opacity"></div>
+
+    <!-- SIDEBAR -->
+    <aside id="sidebar" class="fixed md:relative w-64 h-full bg-[#131314] z-40 transition-transform duration-300 sidebar-hide md:sidebar-show border-r border-white/5 flex flex-col">
+        <div class="p-5 flex-1">
+            <div class="flex items-center justify-between mb-8 md:hidden">
+                <span class="font-bold text-lg">Caca</span>
+                <button onclick="toggleSidebar()" class="text-gray-400"><i class="fa-solid fa-xmark text-xl"></i></button>
+            </div>
+            <button id="newChatBtn" class="w-full flex items-center justify-center gap-2 bg-[#1e1f20] py-3 rounded-full font-medium hover:bg-[#2c2c2e] transition border border-white/5 text-sm">
+                <i class="fa-solid fa-plus text-[10px]"></i> Chat Baru
+            </button>
+        </div>
+        <div class="p-8 border-t border-white/5">
+            <p class="text-[9px] text-gray-600 font-bold uppercase tracking-widest mb-1">Developer by</p>
+            <p class="text-[14px] font-bold italic text-white/50">Fahrul</p>
+        </div>
+    </aside>
+
+    <!-- MAIN CONTENT -->
+    <main class="flex-1 flex flex-col h-full w-full relative bg-[#000]">
+        <!-- Header -->
+        <header class="p-4 flex justify-between items-center z-10 sticky top-0 bg-[#000]">
+            <button onclick="toggleSidebar()" class="md:hidden p-2 text-gray-400"><i class="fa-solid fa-bars-staggered text-xl"></i></button>
+            <div class="text-xl font-bold md:ml-4 tracking-tight">Caca</div>
+            <div class="w-8 h-8 rounded-full bg-gradient-to-tr from-blue-600 to-purple-600 border border-white/20"></div>
+        </header>
+
+        <!-- Chat History -->
+        <div id="chatBox" class="flex-1 overflow-y-auto chat-container p-5 md:px-20 lg:px-60 space-y-6">
+            <!-- Welcome View (Small Text Size) -->
+            <div id="welcomeView" class="h-full flex flex-col justify-center animate-fadeIn">
+                <h1 class="text-4xl md:text-5xl font-bold tracking-tight text-gradient">Halo, User.</h1>
+                <p class="text-3xl md:text-5xl font-bold tracking-tight text-[#444746]">Caca siap bantu</p>
+            </div>
+        </div>
+
+        <!-- Input Box Area -->
+        <div class="ios-blur p-4 md:px-20 lg:px-60 pb-8">
+            <div class="max-w-4xl mx-auto relative">
+                
+                <!-- Preview Foto -->
+                <div id="imgPreview" class="hidden mb-2 px-3 py-1.5 bg-blue-500/10 text-blue-400 text-xs rounded-xl flex items-center gap-2 w-fit border border-blue-500/20">
+                    <i class="fa-solid fa-image"></i> <span id="imgName">photo.jpg</span>
+                    <button id="delImg" class="hover:text-white ml-1"><i class="fa-solid fa-circle-xmark"></i></button>
+                </div>
+
+                <div class="flex items-center gap-2 bg-[#1c1c1e] p-2 rounded-[28px] border border-white/5 focus-within:ring-1 focus-within:ring-white/10 transition-all">
+                    <!-- Upload File -->
+                    <button id="uploadBtn" class="w-10 h-10 flex items-center justify-center text-[#007aff] hover:bg-white/5 rounded-full"><i class="fa-solid fa-circle-plus text-2xl"></i></button>
+                    <input type="file" id="fileInp" class="hidden" accept="image/*">
+                    
+                    <input type="text" id="userInput" placeholder="Tanya Caca..." class="bg-transparent flex-1 outline-none px-2 text-base text-gray-100 placeholder-gray-500">
+                    
+                    <!-- Send Btn -->
+                    <button id="sendBtn" class="w-10 h-10 bg-white text-black rounded-full flex items-center justify-center transition active:scale-90 shadow-lg"><i class="fa-solid fa-arrow-up text-lg"></i></button>
+                </div>
+                <p class="text-center text-[10px] text-gray-700 mt-4 font-bold tracking-[2px] uppercase">Caca AI • iOS 26.2</p>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        const chatBox = document.getElementById('chatBox');
+        const userInput = document.getElementById('userInput');
+        const welcomeView = document.getElementById('welcomeView');
+        const sidebar = document.getElementById('sidebar');
+        const overlay = document.getElementById('overlay');
+        const fileInp = document.getElementById('fileInp');
+
+        // Toggle Sidebar HP
+        function toggleSidebar() {
+            sidebar.classList.toggle('sidebar-hide');
+            sidebar.classList.toggle('sidebar-show');
+            overlay.classList.toggle('hidden');
+        }
+
+        overlay.onclick = toggleSidebar;
+
+        // Reset Chat (Chat Baru)
+        document.getElementById('newChatBtn').onclick = () => location.reload();
+
+        // Upload Logic
+        document.getElementById('uploadBtn').onclick = () => fileInp.click();
+        fileInp.onchange = () => {
+            if(fileInp.files[0]) {
+                document.getElementById('imgPreview').classList.remove('hidden');
+                document.getElementById('imgName').innerText = fileInp.files[0].name;
+            }
+        };
+        document.getElementById('delImg').onclick = () => {
+            fileInp.value = "";
+            document.getElementById('imgPreview').classList.add('hidden');
+        };
+
+        // Kirim Chat
+        async function kirim() {
+            const text = userInput.value.trim();
+            if(!text) return;
+
+            welcomeView.classList.add('hidden');
+            chatBox.innerHTML += `<div class="flex justify-end"><div class="bubble-user px-4 py-2.5 max-w-[85%] text-[15px] shadow-md">${text}</div></div>`;
+            userInput.value = "";
+            chatBox.scrollTop = chatBox.scrollHeight;
+
+            // Efek Loading
+            const lid = 'id' + Date.now();
+            chatBox.innerHTML += `<div id="${lid}" class="flex gap-2 text-gray-500 text-[13px] italic p-2 tracking-wide">Caca sedang mengetik...</div>`;
+
+            try {
+                const res = await fetch('/api/chat', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ messages: [{ role: 'user', content: text }] })
+                });
+                const data = await res.json();
+                document.getElementById(lid).remove();
+
+                const replay = data.choices[0].message.content;
+                chatBox.innerHTML += `<div class="flex justify-start items-start gap-3">
+                    <div class="w-7 h-7 rounded-full bg-blue-600 flex-shrink-0 flex items-center justify-center mt-1"><i class="fa-solid fa-wand-magic-sparkles text-[10px]"></i></div>
+                    <div class="bubble-ai px-4 py-3 max-w-[85%] text-[15px] leading-relaxed shadow-sm">${replay}</div>
+                </div>`;
+            } catch (e) {
+                document.getElementById(lid).innerText = "Maaf, koneksi Caca terputus.";
+            }
+            chatBox.scrollTop = chatBox.scrollHeight;
+        }
+
+        document.getElementById('sendBtn').onclick = kirim;
+        userInput.onkeypress = (e) => { if(e.key === 'Enter') kirim(); };
+    </script>
+</body>
+</html>
