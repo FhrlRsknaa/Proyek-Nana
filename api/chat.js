@@ -4,7 +4,7 @@ export const config = {
 
 export default async function handler(req, res) {
   if (req.method !== "POST") {
-    return res.status(405).json({ error: "POST doang 😒" });
+    return res.status(405).json({ error: "POST doang ya 😒" });
   }
 
   const API_KEY = process.env.OPENAI_API_KEY;
@@ -30,22 +30,32 @@ export default async function handler(req, res) {
         body: JSON.stringify({
           model: "gpt-3.5-turbo",
           messages: [
-            { role: "system", content: "Kamu adalah Nana AI yang ramah dan membantu." },
-            { role: "user", content: lastUserMessage }
-          ]
+            {
+              role: "system",
+              content:
+                "Kamu adalah Nana AI. Gaya santai, ramah, agak nyebelin dikit, selalu jawab pakai emoji."
+            },
+            {
+              role: "user",
+              content: lastUserMessage
+            }
+          ],
+          temperature: 0.8
         })
       }
     );
 
     const data = await response.json();
 
+    const reply =
+      data?.choices?.[0]?.message?.content ??
+      "Hai… aku di sini kok 😌";
+
     return res.status(200).json({
       choices: [
         {
           message: {
-            content:
-              data.choices?.[0]?.message?.content ||
-              "Aku diem dulu 😒"
+            content: reply
           }
         }
       ]
@@ -55,7 +65,7 @@ export default async function handler(req, res) {
       choices: [
         {
           message: {
-            content: "Server OpenAI rese 😤"
+            content: "Server OpenAI lagi ngambek 😒"
           }
         }
       ]
