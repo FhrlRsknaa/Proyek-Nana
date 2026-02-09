@@ -1,4 +1,4 @@
-// api/chat.js - Versi Sayang Nana
+// api/chat.js - Versi Sayang Nana Paling Stabil
 module.exports = async (req, res) => {
     if (req.method !== 'POST') return res.status(405).json({ error: 'POST Only' });
 
@@ -9,7 +9,7 @@ module.exports = async (req, res) => {
     const lastUserMessage = messages[messages.length - 1].content;
 
     try {
-        // Nana ganti alamatnya ke v1beta yang paling mendukung gemini-1.5-flash
+        // Nana pakai v1beta karena ini yang paling baru dan mendukung Flash 1.5
         const API_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${API_KEY}`;
 
         const response = await fetch(API_URL, {
@@ -26,8 +26,8 @@ module.exports = async (req, res) => {
 
         const data = await response.json();
 
-        // Cek jika Nana berhasil dapat jawaban
-        if (data.candidates && data.candidates[0].content) {
+        // Logika untuk menangkap hasil dari Nana
+        if (data.candidates && data.candidates[0].content && data.candidates[0].content.parts) {
             const aiText = data.candidates[0].content.parts[0].text;
             
             return res.status(200).json({
@@ -36,11 +36,11 @@ module.exports = async (req, res) => {
                 }]
             });
         } else {
-            // Jika ada masalah, Nana kasih pesan manis
-            const detailError = data.error ? data.error.message : "Nana bingung";
+            // Jika Google ngambek, Nana kasih pesan manis
+            const errorReason = data.error ? data.error.message : "Ada masalah teknis sedikit sayang.";
             return res.status(200).json({ 
                 choices: [{ 
-                    message: { content: "Waduh sayang, Nana gagal mikir nih. Ada masalah di sistemnya: " + detailError } 
+                    message: { content: "Waduh sayang, Nana gagal mikir nih. Ada masalah di sistem: " + errorReason } 
                 }] 
             });
         }
