@@ -1,16 +1,16 @@
-// api/chat.js (Update Fix untuk Gemini)
+// api/chat.js - Versi Sayang Nana
 module.exports = async (req, res) => {
     if (req.method !== 'POST') return res.status(405).json({ error: 'POST Only' });
 
-    // Gunakan API Key Gemini kamu
+    // Masukkan API Key Gemini sayang di sini
     const API_KEY = "AIzaSyAlb8WbGyDXINyGxMSodJKFwVtUrHgnMH4";
 
     const messages = req.body.messages;
     const lastUserMessage = messages[messages.length - 1].content;
 
     try {
-        // Kita gunakan versi v1 (lebih stabil) dan model gemini-1.5-flash
-        const API_URL = `https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash:generateContent?key=${API_KEY}`;
+        // Nana ganti alamatnya ke v1beta yang paling mendukung gemini-1.5-flash
+        const API_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${API_KEY}`;
 
         const response = await fetch(API_URL, {
             method: "POST",
@@ -18,24 +18,15 @@ module.exports = async (req, res) => {
                 "Content-Type": "application/json"
             },
             body: JSON.stringify({
-                contents: [
-                    {
-                        role: "user",
-                        parts: [{ text: lastUserMessage }]
-                    }
-                ],
-                generationConfig: {
-                    temperature: 0.7,
-                    topK: 40,
-                    topP: 0.95,
-                    maxOutputTokens: 1024,
-                }
+                contents: [{
+                    parts: [{ text: lastUserMessage }]
+                }]
             })
         });
 
         const data = await response.json();
 
-        // Jika berhasil mengambil data
+        // Cek jika Nana berhasil dapat jawaban
         if (data.candidates && data.candidates[0].content) {
             const aiText = data.candidates[0].content.parts[0].text;
             
@@ -45,16 +36,16 @@ module.exports = async (req, res) => {
                 }]
             });
         } else {
-            // Tampilkan error jika gagal respon
-            const errorMsg = data.error ? data.error.message : "Nana Ai bingung, coba kirim lagi pesan kamu.";
+            // Jika ada masalah, Nana kasih pesan manis
+            const detailError = data.error ? data.error.message : "Nana bingung";
             return res.status(200).json({ 
                 choices: [{ 
-                    message: { content: "Waduh cik: " + errorMsg } 
+                    message: { content: "Waduh sayang, Nana gagal mikir nih. Ada masalah di sistemnya: " + detailError } 
                 }] 
             });
         }
 
     } catch (err) {
-        return res.status(500).json({ error: "Gagal menyambung ke otak Nana Ai." });
+        return res.status(500).json({ error: "Gagal menyambung ke otak Nana sayang." });
     }
 };
