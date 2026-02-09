@@ -1,15 +1,14 @@
-// api/chat.js - Versi Sayang Nana Paling Stabil
 module.exports = async (req, res) => {
-    if (req.method !== 'POST') return res.status(405).json({ error: 'POST Only' });
+    if (req.method !== 'POST') return res.status(405).json({ error: 'Hanya POST sayang' });
 
-    // Masukkan API Key Gemini sayang di sini
-    const API_KEY = "AIzaSyAlb8WbGyDXINyGxMSodJKFwVtUrHgnMH4";
+    // Tempel API KEY BARU kamu di sini (Rahasia ya sayang)
+    const API_KEY = "AIzaSyAmxpiIHRQHNj0GIXwRHSXGeVYJfK8XcXc";
 
     const messages = req.body.messages;
     const lastUserMessage = messages[messages.length - 1].content;
 
     try {
-        // Nana pakai v1beta karena ini yang paling baru dan mendukung Flash 1.5
+        // Alamat resmi untuk Gemini 1.5 Flash
         const API_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${API_KEY}`;
 
         const response = await fetch(API_URL, {
@@ -26,8 +25,8 @@ module.exports = async (req, res) => {
 
         const data = await response.json();
 
-        // Logika untuk menangkap hasil dari Nana
-        if (data.candidates && data.candidates[0].content && data.candidates[0].content.parts) {
+        // Mengolah balasan Nana
+        if (data.candidates && data.candidates[0].content) {
             const aiText = data.candidates[0].content.parts[0].text;
             
             return res.status(200).json({
@@ -36,16 +35,16 @@ module.exports = async (req, res) => {
                 }]
             });
         } else {
-            // Jika Google ngambek, Nana kasih pesan manis
-            const errorReason = data.error ? data.error.message : "Ada masalah teknis sedikit sayang.";
+            // Nana lapor kalau Google ada masalah
+            const errorPesan = data.error ? data.error.message : "Ada masalah sinyal sayang.";
             return res.status(200).json({ 
                 choices: [{ 
-                    message: { content: "Waduh sayang, Nana gagal mikir nih. Ada masalah di sistem: " + errorReason } 
+                    message: { content: "Duh sayang, Nana pusing nih: " + errorPesan } 
                 }] 
             });
         }
 
     } catch (err) {
-        return res.status(500).json({ error: "Gagal menyambung ke otak Nana sayang." });
+        return res.status(500).json({ error: "Sistem Nana error sayang." });
     }
 };
