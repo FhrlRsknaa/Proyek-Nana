@@ -3,7 +3,7 @@ export default async function handler(req, res) {
     if (req.method !== 'POST') return res.status(405).send('Method Not Allowed');
 
     // API Key aman di sisi server (Backend)
-    const API_KEY = "sk-Y8zGe0teVChzUK8OkTV1YjC24K2jvfaKIhaNYRgKM0wiZeto";
+    const API_KEY = "AIzaSyAlb8WbGyDXINyGxMSodJKFwVtUrHgnMH4";
 
     try {
         const response = await fetch("https://api.openai.com/v1/chat/completions", {
