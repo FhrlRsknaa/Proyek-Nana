@@ -1,12 +1,12 @@
 export default async function handler(req, res) {
   if (req.method !== "POST") {
-    return res.status(405).json({ error: "Hanya POST sayang 😒" });
+    return res.status(405).json({ error: "POST doang 😒" });
   }
 
   const API_KEY = process.env.GOOGLE_API_KEY;
   if (!API_KEY) {
     return res.status(500).json({
-      choices: [{ message: { content: "API key belum dipasang 😤" } }]
+      choices: [{ message: { content: "API key belum ada 😤" } }]
     });
   }
 
@@ -15,53 +15,44 @@ export default async function handler(req, res) {
     messages[messages.length - 1]?.content || "hai";
 
   try {
-    const API_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.0-pro:generateContent?key=${API_KEY}`;
-
-    const response = await fetch(API_URL, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify({
-        contents: [
-          {
-            parts: [{ text: lastUserMessage }]
-          }
-        ]
-      })
-    });
+    const response = await fetch(
+      `https://generativeai.googleapis.com/v1/models/gemini-1.5-flash:generateContent?key=${API_KEY}`,
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+          contents: [
+            {
+              role: "user",
+              parts: [{ text: lastUserMessage }]
+            }
+          ]
+        })
+      }
+    );
 
     const data = await response.json();
 
-    if (data.candidates && data.candidates[0]?.content?.parts?.[0]?.text) {
-      return res.status(200).json({
-        choices: [
-          {
-            message: {
-              content: data.candidates[0].content.parts[0].text
-            }
+    const text =
+      data.candidates?.[0]?.content?.parts?.[0]?.text;
+
+    return res.status(200).json({
+      choices: [
+        {
+          message: {
+            content: text || "Aku diem dulu 😒"
           }
-        ]
-      });
-    } else {
-      const errMsg =
-        data.error?.message || "Nana/Caca lagi bad mood 😒";
-      return res.status(200).json({
-        choices: [
-          {
-            message: {
-              content: "Duh, error nih: " + errMsg
-            }
-          }
-        ]
-      });
-    }
-  } catch (err) {
+        }
+      ]
+    });
+  } catch (e) {
     return res.status(500).json({
       choices: [
         {
           message: {
-            content: "Server capek, aku ikut bete 😤"
+            content: "Server Google rese 😤"
           }
         }
       ]
